@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-AO">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html> 
+<html lang="pt-AO"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 <title>FINALIZAR PAGAMENTO</title>
 
 <style>
@@ -48,7 +48,7 @@
     border-radius: 10px;
   }
 
-  /* IMAGEM ABAIXO DA CAIXA VERDE */
+  /* IMAGEM */
   .image-box {
     margin-top: 20px;
     text-align: center;
@@ -68,23 +68,216 @@
     background: #fff;
   }
 </style>
+
 </head>
 
 <body>
+
 <div class="container">
 
-  <!-- CONTADOR -->
-  <div class="timer-box">
-    <div class="timer-title">ESSA OFERTA EXPIRA EM:</div>
-    <div class="timer-count" id="countdown">15:00</div>
+<div class="timer-box">
+  <div class="timer-title">ESSA OFERTA EXPIRA EM:</div>
+  <div class="timer-count" id="countdown">15:00</div>
+  <div class="payment-instruction" style="margin-top:10px; font-size:16px; font-weight:bold; color:#fff;">
+    ASSISTA COMO FAZER O PAGAMENTO
   </div>
+</div>
 
-  <!-- IMAGEM ABAIXO DA CAIXA VERDE -->
+<!-- PLAYER HLS ESTILO VTURB -->
+<style>
+  .player-wrapper {
+    max-width: 600px;
+    margin: 20px auto;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .player-wrapper .video-container {
+    position: relative;
+    width: 100%;
+    padding-top: 216.67%; /* Mantém a proporção do player original */
+  }
+
+  .player-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* FAKEBAR no topo */
+  .fakebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10px;
+    width: 100%;
+    background-color: #674EA7;
+    opacity: 0.8;
+    z-index: 10;
+  }
+
+  /* CONTROLLER inferior */
+  .controller {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 0;
+    pointer-events: none; /* desabilita interação */
+  }
+
+  .smallplay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: none;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 15;
+    pointer-events: all;
+  }
+
+  .smallplay svg {
+    fill: white;
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Resume overlay */
+  .resume-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(103,78,167,0.8);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    text-align: center;
+    z-index: 20;
+  }
+
+  .resume-overlay button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #fff;
+    color: #674EA7;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+</style>
+
+<div class="player-wrapper">
+  <div class="video-container">
+    <div class="fakebar"></div>
+    <video id="video" poster="https://cdn.converteai.net/277549df-b872-4a73-b88d-e9e37f9f6b32/6929df81cfa33c2e0a9c6937/poster.jpg" playsinline webkit-playsinline controlslist="nodownload" preload="metadata"></video>
+
+    <!-- BOTÃO SMALL PLAY -->
+    <button class="smallplay" id="smallplay">
+      <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 21.7232L22.0156 12L5 2.27685L5 21.7232Z"></path></svg>
+    </button>
+
+    <!-- RESUME OVERLAY -->
+    <div class="resume-overlay" id="resumeOverlay" style="display:none;">
+      Você já começou a assistir esse vídeo
+      <div style="margin-top:10px;">
+        <button id="continueBtn">Continuar assistindo?</button>
+        <button id="restartBtn">Assistir do início?</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+<script>
+  const video = document.getElementById('video');
+  const url = 'https://cdn.converteai.net/277549df-b872-4a73-b88d-e9e37f9f6b32/6929df81cfa33c2e0a9c6937/video_0.m3u8';
+  const smallPlay = document.getElementById('smallplay');
+  const resumeOverlay = document.getElementById('resumeOverlay');
+  const continueBtn = document.getElementById('continueBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  // CONFIGURAÇÃO HLS
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;
+  } else if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+  }
+
+  // CONTROLE DO SMALLPLAY
+  smallPlay.addEventListener('click', () => {
+    video.play();
+    smallPlay.style.display = 'none';
+  });
+
+  // RESUME (salva último tempo assistido)
+  const savedTime = localStorage.getItem('videoTime') || 0;
+  if(savedTime > 0){
+    resumeOverlay.style.display = 'flex';
+  }
+
+  continueBtn.addEventListener('click', () => {
+    video.currentTime = savedTime;
+    video.play();
+    resumeOverlay.style.display = 'none';
+    smallPlay.style.display = 'none';
+  });
+
+  restartBtn.addEventListener('click', () => {
+    video.currentTime = 0;
+    video.play();
+    resumeOverlay.style.display = 'none';
+    smallPlay.style.display = 'none';
+  });
+
+  // SALVAR TEMPO DE REPRODUÇÃO
+  video.addEventListener('timeupdate', () => {
+    localStorage.setItem('videoTime', video.currentTime);
+  });
+
+  // Mostrar smallplay se o vídeo está pausado no início
+  video.addEventListener('pause', () => {
+    if(video.currentTime < 1) smallPlay.style.display = 'flex';
+  });
+
+</script>
+
+
+<!-- SCRIPT QUE PUXA O PLAYER -->
+<script src="https://cdn.vturb.io/v1/player.js"></script>
+
+  <!-- IMAGEM ABAIXO DO VÍDEO -->
   <div class="image-box">
     <img src="7XZ3L5dlqIs8.png">
   </div>
 
-  <!-- CHECKOUT ORIGINAL -->
+  <!-- CHECKOUT -->
   <iframe src="https://www.kintu.org/product/b2b3b4aa-ac9b-4920-9f6f-b9775b9f17cd"></iframe>
 
 </div>
@@ -92,13 +285,10 @@
 <script>
   const countdownElement = document.getElementById("countdown");
 
-  // Tempo total: 15 minutos
   const totalTime = 15 * 60;
 
-  // Verifica se já existe o fim da oferta salvo
   let endTime = localStorage.getItem("offer_end_time");
 
-  // Se não existir, define agora
   if (!endTime) {
     endTime = Date.now() + totalTime * 1000;
     localStorage.setItem("offer_end_time", endTime);
